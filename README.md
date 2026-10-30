@@ -18,6 +18,83 @@ references/annotation-reference.md   # the annotation methodology (document revi
 install.sh                    # deploy to agent skill directories
 ```
 
+## Quick start
+
+### For everyone: just ask your agent
+
+If LumenPDF is installed as a skill (see "Install the skill" below), you do not run anything by hand. Open Claude Code (or pi), make sure the PDF is in your working folder, and ask:
+
+> "OCR invoice_2026-03.pdf and keep the provenance."
+
+> "Screen this agreement and annotate an exhibit showing the termination
+> clause, then make one showing the missing audit-rights clause."
+
+The agent reads this skill, installs anything missing (`pip install pymupdf pillow`, and tesseract if the PDF is scanned), runs the scripts, and reports back with the transcript, exhibits, and provenance files. If it asks whether to keep page images and the provenance JSON, that is the documented agent behavior - answering "yes, both" is right for audit work.
+
+### For the technically inclined: direct CLI
+
+```bash
+# one-time setup
+pip install pymupdf pillow          # + tesseract for scanned PDFs (table below)
+
+# extract text (hybrid, with full provenance)
+python3 scripts/ocr_pdf.py invoice.pdf invoice_text.md --provenance --keep-images
+
+# annotate the deciding passages
+cat > spec.json <<'EOF'
+[{"page": 2, "kind": "pass",
+  "label": "PASS EVIDENCE: duplicate charge documented",
+  "phrases": ["amount due", "payment received"]}]
+EOF
+python3 scripts/annotate_pdf.py invoice.pdf --spec spec.json --outdir exhibits --provenance
+```
+
+All parameters for both scripts are documented in the "Reference: all parameters" section below.
+
+## Install the skill
+
+```bash
+./install.sh          # all detected runtimes (pi: ~/.agents/skills, Claude Code: ~/.claude/skills)
+./install.sh claude   # Claude Code only
+./install.sh pi       # pi only
+./install.sh --uninstall
+```
+
+## Runtime dependencies
+
+LumenPDF has three third-party dependencies. Two are pip packages with prebuilt wheels on every supported OS; the third (tesseract) is a binary installed per OS. Nothing else is required: no poppler, no compiler, no WSL.
+
+| Component | Role | License | Install |
+|---|---|---|---|
+| PyMuPDF (`pymupdf`) | PDF parsing, text extraction, page rendering | AGPL-3.0 or Artifex commercial | `pip install pymupdf` |
+| Pillow (`pillow`) | Image drawing for OCR-mode annotation exhibits | MIT-CMU | `pip install pillow` |
+| Tesseract OCR | OCR of image-based pages; TSV word coordinates for annotation | Apache-2.0 | per-OS commands below |
+
+One command covers the pip side everywhere:
+
+```bash
+pip install pymupdf pillow
+```
+
+Tesseract is only needed when a PDF has scanned/image-based pages (or for OCR-mode annotation). Install it per OS:
+
+| OS | Command |
+|---|---|
+| macOS | `brew install tesseract` |
+| Debian/Ubuntu | `sudo apt install tesseract-ocr` |
+| Fedora/RHEL | `sudo dnf install tesseract` |
+| Windows native | `winget install UB-Mannheim.TesseractOCR` (or the UB-Mannheim installer), then add to PATH |
+| WSL | use the Linux command inside WSL |
+
+To verify your installation:
+
+```bash
+python3 -c "import pymupdf, PIL; print('pymupdf', pymupdf.__version__)"
+tesseract --version
+```
+
+Note on PyMuPDF licensing: it is dual-licensed AGPL-3.0 / commercial. LumenPDF uses it as an unmodified installed dependency; see `NOTICE.md` for what that means if your organization licenses installed dependencies strictly.
+
 ## Reference: all parameters
 
 Every parameter of both scripts is documented here. Anything not listed in this section does not exist: no hidden flags, no environment-variable overrides, no config files.
@@ -75,94 +152,6 @@ Annotation spec JSON fields (one object per exhibit):
 
 Mode selection per page: pages with >= 20 words of extractable text are annotated with pymupdf (`search_for` + merged passage rects); sparser pages are rendered and annotated from tesseract TSV word coordinates. The provenance records `mode`, per-phrase `occurrences`/`confidence`, `missed` phrases, and `flagged_low_confidence` entries. Exhibits with zero matches print a WARNING to stderr and are still saved (banner only) so the gap is visible.
 
-## Install the skill
-
-```bash
-./install.sh          # all detected runtimes (pi: ~/.agents/skills, Claude Code: ~/.claude/skills)
-./install.sh claude   # Claude Code only
-./install.sh pi       # pi only
-./install.sh --uninstall
-```
-
-## Runtime dependencies
-
-LumenPDF has three third-party dependencies. Two are pip packages with
-prebuilt wheels on every supported OS; the third (tesseract) is a binary
-installed per OS. Nothing else is required: no poppler, no compiler, no WSL.
-
-| Component | Role | License | Install |
-|---|---|---|---|
-| PyMuPDF (`pymupdf`) | PDF parsing, text extraction, page rendering | AGPL-3.0 or Artifex commercial | `pip install pymupdf` |
-| Pillow (`pillow`) | Image drawing for OCR-mode annotation exhibits | MIT-CMU | `pip install pillow` |
-| Tesseract OCR | OCR of image-based pages; TSV word coordinates for annotation | Apache-2.0 | per-OS commands below |
-
-One command covers the pip side everywhere:
-
-```bash
-pip install pymupdf pillow
-```
-
-Tesseract is only needed when a PDF has scanned/image-based pages (or for
-OCR-mode annotation). Install it per OS:
-
-| OS | Command |
-|---|---|
-| macOS | `brew install tesseract` |
-| Debian/Ubuntu | `sudo apt install tesseract-ocr` |
-| Fedora/RHEL | `sudo dnf install tesseract` |
-| Windows native | `winget install UB-Mannheim.TesseractOCR` (or the UB-Mannheim installer), then add to PATH |
-| WSL | use the Linux command inside WSL |
-
-To verify your installation:
-
-```bash
-python3 -c "import pymupdf, PIL; print('pymupdf', pymupdf.__version__)"
-tesseract --version
-```
-
-Note on PyMuPDF licensing: it is dual-licensed AGPL-3.0 / commercial. LumenPDF
-uses it as an unmodified installed dependency; see `NOTICE.md` for what that
-means if your organization licenses installed dependencies strictly.
-## Quick start
-
-### For everyone: just ask your agent
-
-If LumenPDF is installed as a skill (see "Install the skill" below), you do
-not run anything by hand. Open Claude Code (or pi), make sure the PDF is in
-your working folder, and ask:
-
-> "OCR invoice_2026-03.pdf and keep the provenance."
-
-> "Screen this agreement and annotate an exhibit showing the termination
-> clause, then make one showing the missing audit-rights clause."
-
-The agent reads this skill, installs anything missing (`pip install pymupdf
-pillow`, and tesseract if the PDF is scanned), runs the scripts, and reports
-back with the transcript, exhibits, and provenance files. If it asks whether
-to keep page images and the provenance JSON, that is the documented agent
-behavior - answering "yes, both" is right for audit work.
-
-### For the technically inclined: direct CLI
-
-```bash
-# one-time setup
-pip install pymupdf pillow          # + tesseract for scanned PDFs (table below)
-
-# extract text (hybrid, with full provenance)
-python3 scripts/ocr_pdf.py invoice.pdf invoice_text.md --provenance --keep-images
-
-# annotate the deciding passages
-cat > spec.json <<'EOF'
-[{"page": 2, "kind": "pass",
-  "label": "PASS EVIDENCE: duplicate charge documented",
-  "phrases": ["amount due", "payment received"]}]
-EOF
-python3 scripts/annotate_pdf.py invoice.pdf --spec spec.json --outdir exhibits --provenance
-```
-
-All parameters for both scripts are documented in the "Reference: all
-parameters" section below.
-
 ## Acknowledgments
 
 LumenPDF stands on third-party tools: [PyMuPDF](https://pymupdf.readthedocs.io/) for PDF parsing and rendering, [Pillow](https://python-pillow.org/) for image drawing, and [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) for optical character recognition. See `NOTICE.md` for component roles and licensing (PyMuPDF is AGPL-3.0 or commercial - check the note there if your organization licenses installed dependencies strictly).
@@ -178,4 +167,3 @@ MIT for the scripts and skill (see `LICENSE`); CC BY 4.0 for the annotation meth
 - **Cross-platform by construction**: pymupdf/pillow are pure-pip wheels on macOS, Linux, and Windows; the only external binary is tesseract. No poppler, no coreutils, no WSL required on Windows.
 - **Provenance ladder**: page markers -> per-page method comments -> optional page images -> provenance JSON. `--provenance` alone is enough for machine-checkable lineage; add `--keep-images` when pixel-level verification matters.
 - **Model-agnostic**: no LLM or decision-model dependency. Classification and screening workflows consume the transcript; this skill only handles documents.
-
