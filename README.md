@@ -33,7 +33,7 @@ python3 scripts/ocr_pdf.py <input.pdf> [output.md] [options]
 | `input` (positional) | path, required | Input PDF. Must exist and be readable (decrypt encrypted PDFs first). |
 | `output` (positional) | path, optional | Output Markdown transcript. Default: `<input-stem>_text.md` next to the input. |
 | `--dpi N` | int, `200` | Render DPI for pages sent to tesseract. Raise to 300 for faint scans or small fonts. Ignored when no page needs OCR and `--keep-images` is off. |
-| `--range N-M` | string, all pages | 1-indexed inclusive page range. `5` means page 5 only; `5-` and `-9` are accepted by the bash skill but **must be written `5-9` here** (open-ended forms are not parsed). Invalid ranges exit with an error. |
+| `--range N-M` | string, all pages | 1-indexed inclusive page range. `5` means page 5 only. Closed ranges only; open-ended forms are not accepted. Invalid ranges exit with an error. |
 | `--force-ocr` | flag, off | OCR every page in range, including pages with a healthy text layer. |
 | `--no-ocr` | flag, off | Never invoke tesseract. Pages below the word threshold are passed through with their (sparse) text and listed as `thin pages` in the report. |
 | `--min-words N` | int, `20` | Per-page text-layer word count below which a page is OCR'd instead. Raise (e.g. 50) for PDFs whose text layer is fragmentary. |
@@ -167,7 +167,7 @@ parameters" section below.
 
 LumenPDF stands on third-party tools: [PyMuPDF](https://pymupdf.readthedocs.io/) for PDF parsing and rendering, [Pillow](https://python-pillow.org/) for image drawing, and [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) for optical character recognition. See `NOTICE.md` for component roles and licensing (PyMuPDF is AGPL-3.0 or commercial - check the note there if your organization licenses installed dependencies strictly).
 
-The annotation methodology comes from document review workpaper practice, contributed by Audit Risk Media, LLC (CC BY 4.0). The extraction design originates in the bash-based `ocr-pdf` skill.
+The annotation methodology comes from document review workpaper practice, contributed by Audit Risk Media, LLC (CC BY 4.0).
 
 ## License
 
@@ -178,5 +178,4 @@ MIT for the scripts and skill (see `LICENSE`); CC BY 4.0 for the annotation meth
 - **Cross-platform by construction**: pymupdf/pillow are pure-pip wheels on macOS, Linux, and Windows; the only external binary is tesseract. No poppler, no coreutils, no WSL required on Windows.
 - **Provenance ladder**: page markers -> per-page method comments -> optional page images -> provenance JSON. `--provenance` alone is enough for machine-checkable lineage; add `--keep-images` when pixel-level verification matters.
 - **Model-agnostic**: no LLM or decision-model dependency. Classification and screening workflows consume the transcript; this skill only handles documents.
-- There is an older bash implementation of the extractor (`ocr-pdf` skill, macOS/Linux-oriented). LumenPDF is the portable Python line; outputs match (per-page methods agree) though pymupdf's text ordering can differ slightly from `pdftotext -layout`.
 

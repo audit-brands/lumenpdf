@@ -2,8 +2,7 @@
 
 LumenPDF includes:
 
-- `scripts/ocr_pdf.py` - PDF text extraction with per-page hybrid OCR.
-  Python implementation of the extraction contract originally developed in the bash-based `ocr-pdf` skill (per-page method selection, page markers, provenance sidecar).
+- `scripts/ocr_pdf.py` - PDF text extraction with per-page hybrid OCR: per-page method selection, page markers, provenance sidecar.
 
 - `scripts/annotate_pdf.py` - Evidence exhibit annotation (pymupdf text mode,
   tesseract OCR mode). Implements the methodology documented in `references/annotation-reference.md`.
