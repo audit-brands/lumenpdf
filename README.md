@@ -5,7 +5,6 @@
 PDF text extraction and evidence annotation for AI coding agents. Per-page hybrid OCR (exact text layer where present, tesseract OCR where not), page-marked Markdown transcripts, annotated evidence exhibits, and machine-readable provenance for every artifact.
 
 Built for document review: every extraction and annotation is reproducible, whatever the PDF - contracts, invoices, statements, policies, forms, or scanned correspondence. Per-page method, word counts, tool versions, matched phrases with OCR confidence, and optional rendered page images.
-
 ## Contents
 
 ```
@@ -29,22 +28,6 @@ install.sh                    # deploy to agent skill directories
 
 The agent copies the skill folder into its skills directory, runs `pip install pymupdf pillow`, installs tesseract if your OS needs it, and reports what it set up. After that, LumenPDF is available in every session - just ask.
 
-### For the technically inclined
-
-Clone or download the repository, then deploy the skill and install dependencies:
-
-```bash
-git clone git@github.com:audit-brands/lumenpdf.git && cd lumenpdf
-./install.sh          # all detected runtimes (pi: ~/.agents/skills, Claude Code: ~/.claude/skills)
-./install.sh claude   # Claude Code only
-./install.sh pi       # pi only
-./install.sh --uninstall
-
-pip install pymupdf pillow
-```
-
-Dependency details, per-OS tesseract commands, and a verification snippet are in "Runtime dependencies" below.
-
 ## Quick start
 
 ### For everyone: just ask your agent
@@ -58,24 +41,23 @@ If LumenPDF is installed as a skill (see "Quick install" above), you do not run 
 
 The agent reads this skill, installs anything missing (`pip install pymupdf pillow`, and tesseract if the PDF is scanned), runs the scripts, and reports back with the transcript, exhibits, and provenance files. If it asks whether to keep page images and the provenance JSON, that is the documented agent behavior - answering "yes, both" is right for audit work.
 
-### For the technically inclined: direct CLI
+## Technical install
+
+For the technically inclined, or for scripted/CI environments.
+
+Clone or download the repository, then deploy the skill and install dependencies:
 
 ```bash
-# extract text (hybrid, with full provenance)
-python3 scripts/ocr_pdf.py invoice.pdf invoice_text.md --provenance --keep-images
+git clone git@github.com:audit-brands/lumenpdf.git && cd lumenpdf
+./install.sh          # all detected runtimes (pi: ~/.agents/skills, Claude Code: ~/.claude/skills)
+./install.sh claude   # Claude Code only
+./install.sh pi       # pi only
+./install.sh --uninstall
 
-# annotate the deciding passages
-cat > spec.json <<'EOF'
-[{"page": 2, "kind": "pass",
-  "label": "PASS EVIDENCE: duplicate charge documented",
-  "phrases": ["amount due", "payment received"]}]
-EOF
-python3 scripts/annotate_pdf.py invoice.pdf --spec spec.json --outdir exhibits --provenance
+pip install pymupdf pillow
 ```
 
-All parameters for both scripts are documented in the "Reference: all parameters" section below.
-
-## Runtime dependencies
+### Runtime dependencies
 
 LumenPDF has three third-party dependencies. Two are pip packages with prebuilt wheels on every supported OS; the third (tesseract) is a binary installed per OS. Nothing else is required: no poppler, no compiler, no WSL.
 
@@ -84,12 +66,6 @@ LumenPDF has three third-party dependencies. Two are pip packages with prebuilt 
 | PyMuPDF (`pymupdf`) | PDF parsing, text extraction, page rendering | AGPL-3.0 or Artifex commercial | `pip install pymupdf` |
 | Pillow (`pillow`) | Image drawing for OCR-mode annotation exhibits | MIT-CMU | `pip install pillow` |
 | Tesseract OCR | OCR of image-based pages; TSV word coordinates for annotation | Apache-2.0 | per-OS commands below |
-
-One command covers the pip side everywhere:
-
-```bash
-pip install pymupdf pillow
-```
 
 Tesseract is only needed when a PDF has scanned/image-based pages (or for OCR-mode annotation). Install it per OS:
 
@@ -109,6 +85,27 @@ tesseract --version
 ```
 
 Note on PyMuPDF licensing: it is dual-licensed AGPL-3.0 / commercial. LumenPDF uses it as an unmodified installed dependency; see `NOTICE.md` for what that means if your organization licenses installed dependencies strictly.
+
+
+## Technical use
+
+The same workflows as the quick start, driven directly from the command line:
+
+```bash
+# extract text (hybrid, with full provenance)
+python3 scripts/ocr_pdf.py invoice.pdf invoice_text.md --provenance --keep-images
+
+# annotate the deciding passages
+cat > spec.json <<'EOF'
+[{"page": 2, "kind": "pass",
+  "label": "PASS EVIDENCE: duplicate charge documented",
+  "phrases": ["amount due", "payment received"]}]
+EOF
+python3 scripts/annotate_pdf.py invoice.pdf --spec spec.json --outdir exhibits --provenance
+```
+
+All parameters for both scripts are documented in the "Reference: all parameters" section below.
+
 
 ## Reference: all parameters
 
