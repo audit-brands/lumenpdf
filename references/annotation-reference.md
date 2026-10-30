@@ -14,8 +14,9 @@ Two annotation modes, selected by whether the PDF has a text layer:
 ## Dependencies
 
 ```
-pip install pymupdf Pillow tesseract
-# tesseract binary must be installed (brew install tesseract on macOS)
+pip install pymupdf pillow
+# plus the tesseract binary (brew install tesseract on macOS; see SKILL.md
+# for per-OS install commands)
 ```
 
 ---

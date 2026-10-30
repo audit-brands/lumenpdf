@@ -15,8 +15,7 @@ license: MIT
 
 # LumenPDF: PDF text extraction & evidence annotation
 
-Two scripts, one provenance model. Resolve all script paths against this
-skill's own directory (the directory containing this SKILL.md).
+Two scripts, one provenance model. Resolve all script paths against this skill's own directory (the directory containing this SKILL.md).
 
 | Script | Purpose |
 |---|---|
@@ -62,15 +61,11 @@ python3 <skill-dir>/scripts/ocr_pdf.py contract.pdf contract.md --provenance --k
 | `--keep-images` | Save rendered page PNGs to `<stem>_pages/` as provenance |
 | `--provenance` | Write `<output>.prov.json` sidecar |
 
-Output: one Markdown transcript, `=== PAGE NN ===` marker per page (1-indexed),
-`<!-- method: pdftotext (N words) -->` or `<!-- method: tesseract ocr -->` per
-page, and a metadata header. The provenance JSON adds tool versions, per-page
-word counts, image refs, and flags.
+Output: one Markdown transcript, `=== PAGE NN ===` marker per page (1-indexed), `<!-- method: pdftotext (N words) -->` or `<!-- method: tesseract ocr -->` per page, and a metadata header. The provenance JSON adds tool versions, per-page word counts, image refs, and flags.
 
 ## Annotate evidence exhibits
 
-Write a spec JSON listing what to highlight and what the banner says (see
-`references/annotation-reference.md` for the full methodology):
+Write a spec JSON listing what to highlight and what the banner says (see `references/annotation-reference.md` for the full methodology):
 
 ```json
 [
@@ -96,14 +91,11 @@ python3 <skill-dir>/scripts/annotate_pdf.py contract.pdf --spec spec.json --outd
 | `--min-confidence N` | Tesseract word confidence below which a match is flagged REVIEW instead of drawn (default 60) |
 | `--provenance` | Write `<stem>_annotations.prov.json` |
 
-Kinds: `pass` (blue banner, red boxes), `fail` (red banner, red boxes),
-`note` (blue banner, green boxes), `contrast` (blue banner, orange boxes),
-`execution` (blue banner, blue boxes). Set `"banner": "bottom"` for dense pages.
+Kinds: `pass` (blue banner, red boxes), `fail` (red banner, red boxes), `note` (blue banner, green boxes), `contrast` (blue banner, orange boxes), `execution` (blue banner, blue boxes). Set `"banner": "bottom"` for dense pages.
 
 Annotation rules inherited from the reference (do not violate):
 - Merge search hits into **one box per passage**, never one box per word; the
-  script clusters hits by proximity so repeated phrases on one page stay as
-  separate tight boxes.
+  script clusters hits by proximity so repeated phrases on one page stay as separate tight boxes.
 - Match **all occurrences**: the script reports counts and flags ambiguity
   rather than silently annotating the first hit.
 - OCR matches below `--min-confidence` are listed as
@@ -119,25 +111,19 @@ Every artifact records how it was made:
 - Exhibits: `<stem>_annotations.prov.json` with page, label, kind, mode,
   matched phrases (with occurrence counts / OCR confidence), misses, exhibit path
 
-For audit/review evidence, default to `--provenance --keep-images`: workpapers
-should be able to verify what was extracted, from which pixels, with which tools.
+For audit/review evidence, default to `--provenance --keep-images`: workpapers should be able to verify what was extracted, from which pixels, with which tools.
 
 ## Agent guidance
 
-When the user has not said whether to keep provenance artifacts, **ask before
-running**: "Keep the page images and/or the provenance JSON?" Default to
-suggesting both whenever the document is audit evidence, a signed contract, or
-anything headed for a workpaper. Cost: roughly 0.2-1 MB per page for images.
+When the user has not said whether to keep provenance artifacts, **ask before running**: "Keep the page images and/or the provenance JSON?" Default to suggesting both whenever the document is audit evidence, a signed contract, or anything headed for a workpaper. Cost: roughly 0.2-1 MB per page for images.
 
 ## Notes
 
 - OCR is near-perfect on clean renders but misreads stamps, tables, and
-  handwriting; the per-page method comment tells you which passages to
-  spot-check before quoting verbatim.
+  handwriting; the per-page method comment tells you which passages to spot-check before quoting verbatim.
 - Encrypted PDFs: decrypt first (`qpdf --decrypt` or pymupdf
   `doc.authenticate(password)`).
 - This skill does not talk to any LLM or decision model: it is pure document
   tooling. Downstream classification/screening is a separate workflow.
 - License: MIT for code and skill; CC BY 4.0 for the annotation methodology
-  (references/annotation-reference.md). Retain LICENSE and NOTICE.md when
-  redistributing.
+  (references/annotation-reference.md). Retain LICENSE and NOTICE.md when redistributing.
