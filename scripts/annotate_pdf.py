@@ -42,11 +42,13 @@ from pathlib import Path
 
 try:
     import pymupdf
-    from PIL import Image, ImageDraw
+    from PIL import Image, ImageDraw, ImageFont
 except ImportError:
     sys.exit("missing dependencies: pip install pymupdf pillow")
 
 BANNER_HEIGHT = 42
+# Tried in order; Pillow searches the OS font directories for bare filenames.
+BANNER_FONTS = ("DejaVuSans-Bold.ttf", "LiberationSans-Bold.ttf", "Arial Bold.ttf", "arialbd.ttf", "Helvetica.ttc")
 MIN_WORDS_PER_PAGE = 20  # same text-layer threshold as ocr_pdf.py
 
 KIND_STYLES = {
@@ -171,17 +173,29 @@ def find_ocr(page_words: list[dict], phrase: str, min_conf: float) -> tuple[list
     return matches, confs
 
 
-def banner_box(page_w: int, page_h: int, position: str) -> tuple[int, int, int, int]:
+def banner_font(size: int) -> ImageFont.ImageFont:
+    """A readable TrueType face; Pillow's bitmap default is ~11px at any DPI."""
+    for name in BANNER_FONTS:
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
+def banner_box(page_w: int, page_h: int, position: str, height: int) -> tuple[int, int, int, int]:
     if position == "bottom":
-        return 20, page_h - BANNER_HEIGHT - 15, page_w - 20, page_h - 15
-    return 20, 15, page_w - 20, 15 + BANNER_HEIGHT
+        return 20, page_h - height - 15, page_w - 20, page_h - 15
+    return 20, 15, page_w - 20, 15 + height
 
 
 def draw_banner(img: Image.Image, label: str, color, position: str) -> None:
     draw = ImageDraw.Draw(img)
-    x0, y0, x1, y1 = banner_box(img.width, img.height, position)
+    font = banner_font(max(12, img.width // 60))  # scales with render DPI
+    height = max(BANNER_HEIGHT, font.size + 20) if hasattr(font, "size") else BANNER_HEIGHT
+    x0, y0, x1, y1 = banner_box(img.width, img.height, position, height)
     draw.rectangle([x0, y0, x1, y1], fill=(255, 255, 255), outline=color, width=2)
-    draw.text((x0 + 10, y0 + 10), label, fill=color)
+    draw.text((x0 + 10, y0 + (height - getattr(font, "size", 11)) // 2), label, fill=color, font=font)
 
 
 def main() -> None:
@@ -217,15 +231,18 @@ def main() -> None:
 
         if use_text_mode:
             hits, misses = find_text_layer(page, phrases)
-            page_height_pts = page.rect.height
+            # Pool every phrase's hits before merging, so phrases from the same
+            # passage share one box (per the annotation reference).
+            boxes = merge_rects([r for rects in hits.values() for r in rects],
+                                page_height_pts=page.rect.height)
+            for r in boxes:
+                # scale PDF-point coords to render DPI (72pt base)
+                s = args.dpi / 72
+                box = (int(r.x0 * s), int(r.y0 * s), int(r.x1 * s), int(r.y1 * s))
+                draw.rectangle(box, outline=(int(box_color[0] * 255), int(box_color[1] * 255), int(box_color[2] * 255)), width=3)
             for phrase, rects in hits.items():
-                boxes = merge_rects(rects, page_height_pts=page_height_pts)
-                for r in boxes:
-                    # scale PDF-point coords to render DPI (72pt base)
-                    s = args.dpi / 72
-                    box = (int(r.x0 * s), int(r.y0 * s), int(r.x1 * s), int(r.y1 * s))
-                    draw.rectangle(box, outline=(int(box_color[0] * 255), int(box_color[1] * 255), int(box_color[2] * 255)), width=3)
-                rec["matched"].append({"phrase": phrase, "occurrences": len(rects), "boxes": len(boxes)})
+                rec["matched"].append({"phrase": phrase, "line_rects": len(rects)})
+            rec["boxes"] = len(boxes)
             rec["missed"] = misses
         else:
             words = tsv_words(png)

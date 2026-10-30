@@ -162,7 +162,7 @@ Annotation spec JSON fields (one object per exhibit):
 | `banner` | no, default `top` | `top` or `bottom`. Use `bottom` when the top of the page has no whitespace. |
 | `filename` | no, default `<stem>_EX_p<page>_<kind>.png` | Output exhibit filename inside `--outdir`. |
 
-Mode selection per page: pages with >= 20 words of extractable text are annotated with pymupdf (`search_for` + merged passage rects); sparser pages are rendered and annotated from tesseract TSV word coordinates. The provenance records `mode`, per-phrase `occurrences`/`confidence`, `missed` phrases, and `flagged_low_confidence` entries. Exhibits with zero matches print a WARNING to stderr and are still saved (banner only) so the gap is visible.
+Mode selection per page: pages with >= 20 words of extractable text are annotated with pymupdf (`search_for` + merged passage rects); sparser pages are rendered and annotated from tesseract TSV word coordinates. The provenance records `mode`, per-phrase `line_rects`/`confidence`, per-exhibit `boxes`, `missed` phrases, and `flagged_low_confidence` entries. Exhibits with zero matches print a WARNING to stderr and are still saved (banner only) so the gap is visible.
 
 ## Acknowledgments
 

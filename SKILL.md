@@ -101,7 +101,7 @@ Kinds: `pass` (blue banner, red boxes), `fail` (red banner, red boxes), `note` (
 
 Annotation rules inherited from the reference (do not violate):
 - Merge search hits into **one box per passage**, never one box per word; the
-  script clusters hits by proximity so repeated phrases on one page stay as separate tight boxes.
+  script pools every phrase's hits and clusters them by proximity, so phrases from one passage share a box and distant passages stay separate.
 - Match **all occurrences**: the script reports counts and flags ambiguity
   rather than silently annotating the first hit.
 - OCR matches below `--min-confidence` are listed as
@@ -115,7 +115,7 @@ Every artifact records how it was made:
 - Transcript: per-page method comment + metadata header
 - `<output>.prov.json`: per-page method, word counts, image paths, tool versions
 - Exhibits: `<stem>_annotations.prov.json` with page, label, kind, mode,
-  matched phrases (with occurrence counts / OCR confidence), misses, exhibit path
+  matched phrases (with line-rect counts / OCR confidence), box count, misses, exhibit path
 
 For audit/review evidence, default to `--provenance --keep-images`: workpapers should be able to verify what was extracted, from which pixels, with which tools.
 
