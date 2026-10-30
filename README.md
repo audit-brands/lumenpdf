@@ -20,6 +20,75 @@ references/annotation-reference.md   # the annotation methodology (from the
 install.sh                    # deploy to agent skill directories
 ```
 
+## Reference: all parameters
+
+Every parameter of both scripts is documented here. Anything not listed in
+this section does not exist: no hidden flags, no environment-variable
+overrides, no config files.
+
+### `scripts/ocr_pdf.py` - text extraction
+
+```
+python3 scripts/ocr_pdf.py <input.pdf> [output.md] [options]
+```
+
+| Parameter | Type / default | Description |
+|---|---|---|
+| `input` (positional) | path, required | Input PDF. Must exist and be readable (decrypt encrypted PDFs first). |
+| `output` (positional) | path, optional | Output Markdown transcript. Default: `<input-stem>_text.md` next to the input. |
+| `--dpi N` | int, `200` | Render DPI for pages sent to tesseract. Raise to 300 for faint scans or small fonts. Ignored when no page needs OCR and `--keep-images` is off. |
+| `--range N-M` | string, all pages | 1-indexed inclusive page range. `5` means page 5 only; `5-` and `-9` are accepted by the bash skill but **must be written `5-9` here** (open-ended forms are not parsed). Invalid ranges exit with an error. |
+| `--force-ocr` | flag, off | OCR every page in range, including pages with a healthy text layer. |
+| `--no-ocr` | flag, off | Never invoke tesseract. Pages below the word threshold are passed through with their (sparse) text and listed as `thin pages` in the report. |
+| `--min-words N` | int, `20` | Per-page text-layer word count below which a page is OCR'd instead. Raise (e.g. 50) for PDFs whose text layer is fragmentary. |
+| `--lang CODES` | string, `eng` | Tesseract language(s), `+`-joined (e.g. `eng+deu`). Extra languages require the corresponding tesseract language pack. Also recorded in provenance. |
+| `--psm N` | int, `6` | Tesseract page segmentation mode passed to OCR calls. `6` = assume a uniform block of text (good for contracts); `3` is the fully automatic default. OCR falls back to psm 3 automatically if the requested mode fails. |
+| `--keep-images` | flag, off | Save each rendered page PNG to `<input-dir>/<stem>_pages/page-NN.png`. Applies to OCR'd pages always, and to text-layer pages too (as pixel-level provenance). |
+| `--provenance` | flag, off | Write a sidecar JSON next to the output: `<output>.prov.json`. |
+
+Exit codes: `0` success; non-zero on missing dependencies, missing input, or an invalid page range. Progress is printed per page to stderr; the summary report goes to stdout.
+
+Provenance JSON contents (`<output>.prov.json`): `transcript`, `source`,
+`extracted_utc`, `pages_total`, `page_range`, `pages_text_layer`, `pages_ocr`,
+`min_words_threshold`, `force_ocr`, `no_ocr`, `images_kept`, `output_words`,
+`output_bytes`, `tools` (pymupdf and tesseract versions), and per-page records
+(`page`, `method`, `pdftotext_words`, `chars`, plus `image`/`dpi`/`ocr_lang`
+where applicable).
+
+### `scripts/annotate_pdf.py` - evidence exhibits
+
+```
+python3 scripts/annotate_pdf.py <input.pdf> --spec spec.json --outdir DIR [options]
+```
+
+| Parameter | Type / default | Description |
+|---|---|---|
+| `input` (positional) | path, required | Input PDF to annotate. |
+| `--spec FILE` | path, required | Annotation spec JSON (fields below). |
+| `--outdir DIR` | path, required | Directory for exhibit PNGs (created if missing). Intermediate raw renders are removed after each exhibit is saved. |
+| `--dpi N` | int, `120` | Render DPI for exhibit images. 120 is readable for workpapers; raise for print quality. |
+| `--lang CODES` | string, `eng` | Tesseract language for OCR-mode pages. |
+| `--min-confidence N` | float, `60.0` | Minimum average tesseract word confidence (0-100) for an OCR match to be drawn. Matches below it are listed under `flagged_low_confidence` in the provenance instead. Text-layer matches are never confidence-gated. |
+| `--provenance` | flag, off | Write `<stem>_annotations.prov.json` into `--outdir`. |
+
+Annotation spec JSON fields (one object per exhibit):
+
+| Field | Required | Description |
+|---|---|---|
+| `page` | yes | 1-indexed page number to annotate. |
+| `label` | yes | Banner text. Convention: `PASS EVIDENCE: ...`, `FAIL EVIDENCE: ...`, `NOTE: ...`, `CONTRAST: ...`, `EXECUTION: ...`. |
+| `kind` | no, default `note` | `pass` (blue banner, red boxes), `fail` (red banner, red boxes), `note` (blue banner, green boxes), `contrast` (blue banner, orange boxes), `execution` (blue banner, blue boxes). |
+| `phrases` | no | List of phrases to search for and box. 3-8 distinctive words each works best. All occurrences are matched; hits are clustered into one box per passage. |
+| `banner` | no, default `top` | `top` or `bottom`. Use `bottom` when the top of the page has no whitespace. |
+| `filename` | no, default `<stem>_EX_p<page>_<kind>.png` | Output exhibit filename inside `--outdir`. |
+
+Mode selection per page: pages with >= 20 words of extractable text are
+annotated with pymupdf (`search_for` + merged passage rects); sparser pages
+are rendered and annotated from tesseract TSV word coordinates. The provenance
+records `mode`, per-phrase `occurrences`/`confidence`, `missed` phrases, and
+`flagged_low_confidence` entries. Exhibits with zero matches print a WARNING
+to stderr and are still saved (banner only) so the gap is visible.
+
 ## Install the skill
 
 ```bash

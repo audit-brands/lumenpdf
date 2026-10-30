@@ -53,11 +53,12 @@ python3 <skill-dir>/scripts/ocr_pdf.py contract.pdf contract.md --provenance --k
 |---|---|
 | `[output.md]` | Output path (default `<input-stem>_text.md` next to input) |
 | `--dpi N` | Render DPI for OCR (default 200; 300 for faint scans) |
-| `--range N-M` | Only pages N–M (1-indexed, inclusive) |
+| `--range N-M` | Only pages N-M (1-indexed, inclusive; closed ranges only) |
 | `--force-ocr` | OCR every page, even with a text layer |
 | `--no-ocr` | Never OCR; sparse pages passed through and listed as "thin" |
 | `--min-words N` | Words/page below which a page is OCR'd (default 20) |
 | `--lang ENG+DEU` | Tesseract language(s), `+`-joined |
+| `--psm N` | Tesseract page segmentation mode (default 6; falls back to 3 on failure) |
 | `--keep-images` | Save rendered page PNGs to `<stem>_pages/` as provenance |
 | `--provenance` | Write `<output>.prov.json` sidecar |
 
@@ -126,7 +127,7 @@ should be able to verify what was extracted, from which pixels, with which tools
 When the user has not said whether to keep provenance artifacts, **ask before
 running**: "Keep the page images and/or the provenance JSON?" Default to
 suggesting both whenever the document is audit evidence, a signed contract, or
-anything headed for a workpaper. Cost: roughly 0.2–1 MB per page for images.
+anything headed for a workpaper. Cost: roughly 0.2-1 MB per page for images.
 
 ## Notes
 
