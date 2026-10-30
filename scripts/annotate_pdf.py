@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LumenPDF annotate_pdf.py — create annotated evidence exhibits from a PDF.
+"""LumenPDF annotate_pdf.py - create annotated evidence exhibits from a PDF.
 
 Implements the contract-review annotation reference (see references/
 annotation-reference.md): red boxes around the deciding language, blue
@@ -266,7 +266,7 @@ def main() -> None:
         print(f"  provenance: {prov_path}")
     no_match = [r for r in provenance if not r["matched"]]
     if no_match:
-        print(f"  WARNING: {len(no_match)} exhibit(s) had no matched phrase — review manually")
+        print(f"  WARNING: {len(no_match)} exhibit(s) had no matched phrase - review manually")
 
 
 if __name__ == "__main__":

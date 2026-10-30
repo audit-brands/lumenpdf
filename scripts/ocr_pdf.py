@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""LumenPDF ocr_pdf.py — cross-platform PDF text extraction with per-page hybrid OCR.
+"""LumenPDF ocr_pdf.py - cross-platform PDF text extraction with per-page hybrid OCR.
 
-Python port of the bash `ocr_pdf.sh` (ocr-pdf skill), built on pymupdf +
-tesseract. Same output contract:
+Built on pymupdf + tesseract. Output contract:
 
   - per-page method selection: pdftotext-equivalent (pymupdf text layer) when
     the page has >= --min-words words, tesseract OCR otherwise
