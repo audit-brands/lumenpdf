@@ -121,6 +121,8 @@ For audit/review evidence, default to `--provenance --keep-images`: workpapers s
 
 ## Agent guidance
 
+**Installing this skill is your job when asked.** If the user says "install the LumenPDF skill from this folder", copy this whole directory (SKILL.md, scripts/, references/) into your skills directory: `~/.claude/skills/lumenpdf` for Claude Code, `~/.agents/skills/lumenpdf` for pi. Then continue with the dependency step below and report where you installed it.
+
 **Dependencies are your job.** Before the first run in a session, check and install what is missing rather than asking the user to: `pip install pymupdf pillow` covers most cases; install tesseract per the OS table above only when a PDF has image-based pages (or install on failure). Report what you installed.
 
 When the user has not said whether to keep provenance artifacts, **ask before running**: "Keep the page images and/or the provenance JSON?" Default to suggesting both whenever the document is review evidence, a signed agreement, or anything headed for a workpaper. Cost: roughly 0.2-1 MB per page for images. For the JSON sidecar, offer it in the same breath. For review evidence, suggest both.

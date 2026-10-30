@@ -18,11 +18,38 @@ references/annotation-reference.md   # the annotation methodology (document revi
 install.sh                    # deploy to agent skill directories
 ```
 
+## Quick install
+
+### For everyone: let your agent do it
+
+1. Download the repository: use the green **Code** button on GitHub and pick **Download ZIP**, then unzip it.
+2. Open Claude Code (or pi) in the unzipped folder and say:
+
+> "Install the LumenPDF skill from this folder into your skills directory, and install all of its dependencies."
+
+The agent copies the skill folder into its skills directory, runs `pip install pymupdf pillow`, installs tesseract if your OS needs it, and reports what it set up. After that, LumenPDF is available in every session - just ask.
+
+### For the technically inclined
+
+Clone or download the repository, then deploy the skill and install dependencies:
+
+```bash
+git clone git@github.com:audit-brands/lumenpdf.git && cd lumenpdf
+./install.sh          # all detected runtimes (pi: ~/.agents/skills, Claude Code: ~/.claude/skills)
+./install.sh claude   # Claude Code only
+./install.sh pi       # pi only
+./install.sh --uninstall
+
+pip install pymupdf pillow
+```
+
+Dependency details, per-OS tesseract commands, and a verification snippet are in "Runtime dependencies" below.
+
 ## Quick start
 
 ### For everyone: just ask your agent
 
-If LumenPDF is installed as a skill (see "Install the skill" below), you do not run anything by hand. Open Claude Code (or pi), make sure the PDF is in your working folder, and ask:
+If LumenPDF is installed as a skill (see "Quick install" above), you do not run anything by hand. Open Claude Code (or pi), make sure the PDF is in your working folder, and ask:
 
 > "OCR invoice_2026-03.pdf and keep the provenance."
 
@@ -34,9 +61,6 @@ The agent reads this skill, installs anything missing (`pip install pymupdf pill
 ### For the technically inclined: direct CLI
 
 ```bash
-# one-time setup
-pip install pymupdf pillow          # + tesseract for scanned PDFs (table below)
-
 # extract text (hybrid, with full provenance)
 python3 scripts/ocr_pdf.py invoice.pdf invoice_text.md --provenance --keep-images
 
@@ -50,15 +74,6 @@ python3 scripts/annotate_pdf.py invoice.pdf --spec spec.json --outdir exhibits -
 ```
 
 All parameters for both scripts are documented in the "Reference: all parameters" section below.
-
-## Install the skill
-
-```bash
-./install.sh          # all detected runtimes (pi: ~/.agents/skills, Claude Code: ~/.claude/skills)
-./install.sh claude   # Claude Code only
-./install.sh pi       # pi only
-./install.sh --uninstall
-```
 
 ## Runtime dependencies
 
