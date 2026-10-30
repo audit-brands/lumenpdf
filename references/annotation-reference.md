@@ -1,6 +1,6 @@
 # PDF Annotation Reference -- Contract Review Workpaper Exhibits
 
-This document describes the PDF annotation approach used in the 2026 Data Privacy audit contract reviews. It is intended as a reference for implementing annotation in an OCR/PDF skill.
+This document describes a PDF annotation approach for contract review workpaper exhibits. It is intended as a reference for implementing annotation in an OCR/PDF skill.
 
 ## Overview
 

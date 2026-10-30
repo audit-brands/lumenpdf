@@ -9,7 +9,7 @@ LumenPDF includes:
   tesseract OCR mode). Implements the methodology documented in `references/annotation-reference.md`.
 
 - `references/annotation-reference.md` - Annotation methodology from the
-  2026 Data Privacy audit contract reviews. Attribution: Audit Risk Media, LLC, 2026. Licensed CC BY 4.0.
+  contract review workpaper exhibits. Attribution: Audit Risk Media, LLC, 2026. Licensed CC BY 4.0.
 
 When redistributing LumenPDF or a derivative, retain this NOTICE and the LICENSE file. The SKILL.md `license: MIT` field must not be removed.
 

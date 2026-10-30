@@ -10,8 +10,8 @@ Built for audit and contract-review work: every extraction and annotation is rep
 SKILL.md                      # agent-facing skill instructions (portable format)
 scripts/ocr_pdf.py            # extraction: per-page hybrid, --provenance, --keep-images
 scripts/annotate_pdf.py       # annotation: pymupdf text mode + tesseract OCR mode
-references/annotation-reference.md   # the annotation methodology (from the
-                                     # 2026 Data Privacy audit contract reviews)
+references/annotation-reference.md   # the annotation methodology (contract
+                                     # review workpaper exhibits)
 install.sh                    # deploy to agent skill directories
 ```
 
@@ -164,7 +164,7 @@ parameters" section below.
 
 LumenPDF stands on third-party tools: [PyMuPDF](https://pymupdf.readthedocs.io/) for PDF parsing and rendering, [Pillow](https://python-pillow.org/) for image drawing, and [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) for optical character recognition. See `NOTICE.md` for component roles and licensing (PyMuPDF is AGPL-3.0 or commercial - check the note there if your organization licenses installed dependencies strictly).
 
-The annotation methodology comes from the 2026 Data Privacy audit contract reviews, contributed by Audit Risk Media, LLC (CC BY 4.0). The extraction design originates in the bash-based `ocr-pdf` skill.
+The annotation methodology comes from contract review workpaper practice, contributed by Audit Risk Media, LLC (CC BY 4.0). The extraction design originates in the bash-based `ocr-pdf` skill.
 
 ## License
 
