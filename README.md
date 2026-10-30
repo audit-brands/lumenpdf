@@ -179,6 +179,7 @@ MIT for the scripts and skill (see `LICENSE`); CC BY 4.0 for the annotation meth
 - **Cross-platform by construction**: pymupdf/pillow are pure-pip wheels on macOS, Linux, and Windows; the only external binary is tesseract. No poppler, no coreutils, no WSL required on Windows.
 - **Provenance ladder**: page markers -> per-page method comments -> optional page images -> provenance JSON. `--provenance` alone is enough for machine-checkable lineage; add `--keep-images` when pixel-level verification matters.
 - **Model-agnostic**: no LLM or decision-model dependency. Classification and screening workflows consume the transcript; this skill only handles documents.
+
 ## Made with <3
 
 Made with love from Atlanta, GA.
