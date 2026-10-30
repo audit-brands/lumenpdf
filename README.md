@@ -1,13 +1,8 @@
 # LumenPDF
 
-PDF text extraction and evidence annotation for AI coding agents. Per-page
-hybrid OCR (exact text layer where present, tesseract OCR where not), page-marked
-Markdown transcripts, annotated PASS/FAIL evidence exhibits, and machine-readable
-provenance for every artifact.
+PDF text extraction and evidence annotation for AI coding agents. Per-page hybrid OCR (exact text layer where present, tesseract OCR where not), page-marked Markdown transcripts, annotated PASS/FAIL evidence exhibits, and machine-readable provenance for every artifact.
 
-Built for audit and contract-review work: every extraction and annotation is
-reproducible: per-page method, word counts, tool versions, matched phrases with
-OCR confidence, and optional rendered page images.
+Built for audit and contract-review work: every extraction and annotation is reproducible: per-page method, word counts, tool versions, matched phrases with OCR confidence, and optional rendered page images.
 
 ## Contents
 
@@ -22,9 +17,7 @@ install.sh                    # deploy to agent skill directories
 
 ## Reference: all parameters
 
-Every parameter of both scripts is documented here. Anything not listed in
-this section does not exist: no hidden flags, no environment-variable
-overrides, no config files.
+Every parameter of both scripts is documented here. Anything not listed in this section does not exist: no hidden flags, no environment-variable overrides, no config files.
 
 ### `scripts/ocr_pdf.py` - text extraction
 
@@ -48,12 +41,7 @@ python3 scripts/ocr_pdf.py <input.pdf> [output.md] [options]
 
 Exit codes: `0` success; non-zero on missing dependencies, missing input, or an invalid page range. Progress is printed per page to stderr; the summary report goes to stdout.
 
-Provenance JSON contents (`<output>.prov.json`): `transcript`, `source`,
-`extracted_utc`, `pages_total`, `page_range`, `pages_text_layer`, `pages_ocr`,
-`min_words_threshold`, `force_ocr`, `no_ocr`, `images_kept`, `output_words`,
-`output_bytes`, `tools` (pymupdf and tesseract versions), and per-page records
-(`page`, `method`, `pdftotext_words`, `chars`, plus `image`/`dpi`/`ocr_lang`
-where applicable).
+Provenance JSON contents (`<output>.prov.json`): `transcript`, `source`, `extracted_utc`, `pages_total`, `page_range`, `pages_text_layer`, `pages_ocr`, `min_words_threshold`, `force_ocr`, `no_ocr`, `images_kept`, `output_words`, `output_bytes`, `tools` (pymupdf and tesseract versions), and per-page records (`page`, `method`, `pdftotext_words`, `chars`, plus `image`/`dpi`/`ocr_lang` where applicable).
 
 ### `scripts/annotate_pdf.py` - evidence exhibits
 
@@ -82,12 +70,7 @@ Annotation spec JSON fields (one object per exhibit):
 | `banner` | no, default `top` | `top` or `bottom`. Use `bottom` when the top of the page has no whitespace. |
 | `filename` | no, default `<stem>_EX_p<page>_<kind>.png` | Output exhibit filename inside `--outdir`. |
 
-Mode selection per page: pages with >= 20 words of extractable text are
-annotated with pymupdf (`search_for` + merged passage rects); sparser pages
-are rendered and annotated from tesseract TSV word coordinates. The provenance
-records `mode`, per-phrase `occurrences`/`confidence`, `missed` phrases, and
-`flagged_low_confidence` entries. Exhibits with zero matches print a WARNING
-to stderr and are still saved (banner only) so the gap is visible.
+Mode selection per page: pages with >= 20 words of extractable text are annotated with pymupdf (`search_for` + merged passage rects); sparser pages are rendered and annotated from tesseract TSV word coordinates. The provenance records `mode`, per-phrase `occurrences`/`confidence`, `missed` phrases, and `flagged_low_confidence` entries. Exhibits with zero matches print a WARNING to stderr and are still saved (banner only) so the gap is visible.
 
 ## Install the skill
 
@@ -130,36 +113,18 @@ python3 scripts/annotate_pdf.py contract.pdf --spec spec.json --outdir exhibits 
 
 ## Acknowledgments
 
-LumenPDF stands on third-party tools: [PyMuPDF](https://pymupdf.readthedocs.io/)
-for PDF parsing and rendering, [Pillow](https://python-pillow.org/) for image
-drawing, and [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) for
-optical character recognition. See `NOTICE.md` for component roles and
-licensing (PyMuPDF is AGPL-3.0 or commercial - check the note there if your
-organization licenses installed dependencies strictly).
+LumenPDF stands on third-party tools: [PyMuPDF](https://pymupdf.readthedocs.io/) for PDF parsing and rendering, [Pillow](https://python-pillow.org/) for image drawing, and [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) for optical character recognition. See `NOTICE.md` for component roles and licensing (PyMuPDF is AGPL-3.0 or commercial - check the note there if your organization licenses installed dependencies strictly).
 
-The annotation methodology comes from the 2026 Data Privacy audit contract
-reviews, contributed by Audit Risk Media, LLC (CC BY 4.0). The extraction
-design originates in the bash-based `ocr-pdf` skill.
+The annotation methodology comes from the 2026 Data Privacy audit contract reviews, contributed by Audit Risk Media, LLC (CC BY 4.0). The extraction design originates in the bash-based `ocr-pdf` skill.
 
 ## License
 
-MIT for the scripts and skill (see `LICENSE`); CC BY 4.0 for the annotation
-methodology in `references/annotation-reference.md` (see
-`references/annotation-reference.LICENSE`). Attribution requirements are
-summarized in `NOTICE.md` - retain LICENSE and NOTICE when redistributing.
+MIT for the scripts and skill (see `LICENSE`); CC BY 4.0 for the annotation methodology in `references/annotation-reference.md` (see `references/annotation-reference.LICENSE`). Attribution requirements are summarized in `NOTICE.md` - retain LICENSE and NOTICE when redistributing.
 
 ## Design notes
 
-- **Cross-platform by construction**: pymupdf/pillow are pure-pip wheels on
-  macOS, Linux, and Windows; the only external binary is tesseract. No poppler,
-  no coreutils, no WSL required on Windows.
-- **Provenance ladder**: page markers → per-page method comments → optional
-  page images → provenance JSON. `--provenance` alone is enough for
-  machine-checkable lineage; add `--keep-images` when pixel-level verification
-  matters.
-- **Model-agnostic**: no LLM or decision-model dependency. Classification and
-  screening workflows consume the transcript; this skill only handles documents.
-- There is an older bash implementation of the extractor (`ocr-pdf` skill,
-  macOS/Linux-oriented). LumenPDF is the portable Python line; outputs match
-  (per-page methods agree) though pymupdf's text ordering can differ slightly
-  from `pdftotext -layout`.
+- **Cross-platform by construction**: pymupdf/pillow are pure-pip wheels on macOS, Linux, and Windows; the only external binary is tesseract. No poppler, no coreutils, no WSL required on Windows.
+- **Provenance ladder**: page markers -> per-page method comments -> optional page images -> provenance JSON. `--provenance` alone is enough for machine-checkable lineage; add `--keep-images` when pixel-level verification matters.
+- **Model-agnostic**: no LLM or decision-model dependency. Classification and screening workflows consume the transcript; this skill only handles documents.
+- There is an older bash implementation of the extractor (`ocr-pdf` skill, macOS/Linux-oriented). LumenPDF is the portable Python line; outputs match (per-page methods agree) though pymupdf's text ordering can differ slightly from `pdftotext -layout`.
+
