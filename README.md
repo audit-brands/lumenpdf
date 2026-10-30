@@ -180,6 +180,6 @@ MIT for the scripts and skill (see `LICENSE`); CC BY 4.0 for the annotation meth
 - **Provenance ladder**: page markers -> per-page method comments -> optional page images -> provenance JSON. `--provenance` alone is enough for machine-checkable lineage; add `--keep-images` when pixel-level verification matters.
 - **Model-agnostic**: no LLM or decision-model dependency. Classification and screening workflows consume the transcript; this skill only handles documents.
 
-## Made with <3
+## Made with ♥
 
 Made with love from Atlanta, GA.
