@@ -83,19 +83,43 @@ Mode selection per page: pages with >= 20 words of extractable text are annotate
 
 ## Runtime dependencies
 
+LumenPDF has three third-party dependencies. Two are pip packages with
+prebuilt wheels on every supported OS; the third (tesseract) is a binary
+installed per OS. Nothing else is required: no poppler, no compiler, no WSL.
+
+| Component | Role | License | Install |
+|---|---|---|---|
+| PyMuPDF (`pymupdf`) | PDF parsing, text extraction, page rendering | AGPL-3.0 or Artifex commercial | `pip install pymupdf` |
+| Pillow (`pillow`) | Image drawing for OCR-mode annotation exhibits | MIT-CMU | `pip install pillow` |
+| Tesseract OCR | OCR of image-based pages; TSV word coordinates for annotation | Apache-2.0 | per-OS commands below |
+
+One command covers the pip side everywhere:
+
 ```bash
 pip install pymupdf pillow
 ```
 
-Plus tesseract (only needed for scanned pages / image-mode annotation):
+Tesseract is only needed when a PDF has scanned/image-based pages (or for
+OCR-mode annotation). Install it per OS:
 
 | OS | Command |
 |---|---|
 | macOS | `brew install tesseract` |
 | Debian/Ubuntu | `sudo apt install tesseract-ocr` |
 | Fedora/RHEL | `sudo dnf install tesseract` |
-| Windows | `winget install UB-Mannheim.TesseractOCR` |
+| Windows native | `winget install UB-Mannheim.TesseractOCR` (or the UB-Mannheim installer), then add to PATH |
+| WSL | use the Linux command inside WSL |
 
+To verify your installation:
+
+```bash
+python3 -c "import pymupdf, PIL; print('pymupdf', pymupdf.__version__)"
+tesseract --version
+```
+
+Note on PyMuPDF licensing: it is dual-licensed AGPL-3.0 / commercial. LumenPDF
+uses it as an unmodified installed dependency; see `NOTICE.md` for what that
+means if your organization licenses installed dependencies strictly.
 ## Quick start
 
 ```bash

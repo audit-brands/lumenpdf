@@ -24,7 +24,13 @@ Two scripts, one provenance model. Resolve all script paths against this skill's
 
 ## Install (per OS)
 
-Python dependencies are identical everywhere:
+| Component | Role | License | Install |
+|---|---|---|---|
+| PyMuPDF (`pymupdf`) | PDF parsing, text extraction, page rendering | AGPL-3.0 or Artifex commercial | `pip install pymupdf` |
+| Pillow (`pillow`) | Image drawing for OCR-mode annotation exhibits | MIT-CMU | `pip install pillow` |
+| Tesseract OCR | OCR of image-based pages; TSV word coordinates for annotation | Apache-2.0 | per-OS commands below |
+
+One command covers the pip side on every OS (prebuilt wheels, no compiler):
 
 ```bash
 pip install pymupdf pillow
