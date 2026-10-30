@@ -3,11 +3,11 @@ name: lumenpdf
 description: >
   Extract text from any PDF with per-page hybrid OCR (pymupdf + tesseract),
   and create annotated evidence exhibits (highlighted passages with PASS/FAIL
-  banners) for contract review and audit workpapers. Cross-platform: macOS,
+  banners) for document review and evidence workpapers. Cross-platform: macOS,
   Linux, and native Windows: pure pip dependencies plus one tesseract binary.
   Also writes machine-readable provenance (per-page extraction method, word
   counts, tool versions) and can keep rendered page images. Use when the user
-  says "OCR this PDF", "extract text from a PDF", "annotate the contract",
+  says "OCR this PDF", "extract text from a PDF", "annotate this document",
   "make an evidence exhibit", "highlight the clause", "LumenPDF", or any
   PDF-to-text or PDF-annotation need.
 license: MIT
@@ -51,7 +51,7 @@ tesseract is the only external binary:
 ## Extract text
 
 ```bash
-python3 <skill-dir>/scripts/ocr_pdf.py contract.pdf contract.md --provenance --keep-images
+python3 <skill-dir>/scripts/ocr_pdf.py document.pdf document.md --provenance --keep-images
 ```
 
 | Option | Purpose |
@@ -86,7 +86,7 @@ Write a spec JSON listing what to highlight and what the banner says (see `refer
 ```
 
 ```bash
-python3 <skill-dir>/scripts/annotate_pdf.py contract.pdf --spec spec.json --outdir workpapers/exhibits --provenance
+python3 <skill-dir>/scripts/annotate_pdf.py document.pdf --spec spec.json --outdir exhibits --provenance
 ```
 
 | Option | Purpose |
@@ -123,7 +123,7 @@ For audit/review evidence, default to `--provenance --keep-images`: workpapers s
 
 **Dependencies are your job.** Before the first run in a session, check and install what is missing rather than asking the user to: `pip install pymupdf pillow` covers most cases; install tesseract per the OS table above only when a PDF has image-based pages (or install on failure). Report what you installed.
 
-When the user has not said whether to keep provenance artifacts, **ask before running**: "Keep the page images and/or the provenance JSON?" Default to suggesting both whenever the document is audit evidence, a signed contract, or anything headed for a workpaper. Cost: roughly 0.2-1 MB per page for images. For the JSON sidecar, offer it in the same breath. For audit evidence, suggest both.
+When the user has not said whether to keep provenance artifacts, **ask before running**: "Keep the page images and/or the provenance JSON?" Default to suggesting both whenever the document is review evidence, a signed agreement, or anything headed for a workpaper. Cost: roughly 0.2-1 MB per page for images. For the JSON sidecar, offer it in the same breath. For review evidence, suggest both.
 
 ## Notes
 

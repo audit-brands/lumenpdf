@@ -1,8 +1,8 @@
 # LumenPDF
 
-PDF text extraction and evidence annotation for AI coding agents. Per-page hybrid OCR (exact text layer where present, tesseract OCR where not), page-marked Markdown transcripts, annotated PASS/FAIL evidence exhibits, and machine-readable provenance for every artifact.
+PDF text extraction and evidence annotation for AI coding agents. Per-page hybrid OCR (exact text layer where present, tesseract OCR where not), page-marked Markdown transcripts, annotated evidence exhibits, and machine-readable provenance for every artifact.
 
-Built for audit and contract-review work: every extraction and annotation is reproducible: per-page method, word counts, tool versions, matched phrases with OCR confidence, and optional rendered page images.
+Built for document review: every extraction and annotation is reproducible, whatever the PDF - contracts, invoices, statements, policies, forms, or scanned correspondence. Per-page method, word counts, tool versions, matched phrases with OCR confidence, and optional rendered page images.
 
 ## Contents
 
@@ -10,8 +10,8 @@ Built for audit and contract-review work: every extraction and annotation is rep
 SKILL.md                      # agent-facing skill instructions (portable format)
 scripts/ocr_pdf.py            # extraction: per-page hybrid, --provenance, --keep-images
 scripts/annotate_pdf.py       # annotation: pymupdf text mode + tesseract OCR mode
-references/annotation-reference.md   # the annotation methodology (contract
-                                     # review workpaper exhibits)
+references/annotation-reference.md   # the annotation methodology (document review
+                                     # workpaper exhibits)
 install.sh                    # deploy to agent skill directories
 ```
 
@@ -35,7 +35,7 @@ python3 scripts/ocr_pdf.py <input.pdf> [output.md] [options]
 | `--no-ocr` | flag, off | Never invoke tesseract. Pages below the word threshold are passed through with their (sparse) text and listed as `thin pages` in the report. |
 | `--min-words N` | int, `20` | Per-page text-layer word count below which a page is OCR'd instead. Raise (e.g. 50) for PDFs whose text layer is fragmentary. |
 | `--lang CODES` | string, `eng` | Tesseract language(s), `+`-joined (e.g. `eng+deu`). Extra languages require the corresponding tesseract language pack. Also recorded in provenance. |
-| `--psm N` | int, `6` | Tesseract page segmentation mode passed to OCR calls. `6` = assume a uniform block of text (good for contracts); `3` is the fully automatic default. OCR falls back to psm 3 automatically if the requested mode fails. |
+| `--psm N` | int, `6` | Tesseract page segmentation mode passed to OCR calls. `6` = assume a uniform block of text (good for letters and agreements); `3` is the fully automatic default. OCR falls back to psm 3 automatically if the requested mode fails. |
 | `--keep-images` | flag, off | Save each rendered page PNG to `<input-dir>/<stem>_pages/page-NN.png`. Applies to OCR'd pages always, and to text-layer pages too (as pixel-level provenance). |
 | `--provenance` | flag, off | Write a sidecar JSON next to the output: `<output>.prov.json`. |
 
@@ -128,9 +128,9 @@ If LumenPDF is installed as a skill (see "Install the skill" below), you do
 not run anything by hand. Open Claude Code (or pi), make sure the PDF is in
 your working folder, and ask:
 
-> "OCR contractA.pdf and keep the provenance."
+> "OCR invoice_2026-03.pdf and keep the provenance."
 
-> "Screen this contract and annotate an exhibit showing the termination
+> "Screen this agreement and annotate an exhibit showing the termination
 > clause, then make one showing the missing audit-rights clause."
 
 The agent reads this skill, installs anything missing (`pip install pymupdf
@@ -146,15 +146,15 @@ behavior - answering "yes, both" is right for audit work.
 pip install pymupdf pillow          # + tesseract for scanned PDFs (table below)
 
 # extract text (hybrid, with full provenance)
-python3 scripts/ocr_pdf.py contract.pdf contract.md --provenance --keep-images
+python3 scripts/ocr_pdf.py invoice.pdf invoice_text.md --provenance --keep-images
 
 # annotate the deciding passages
 cat > spec.json <<'EOF'
-[{"page": 4, "kind": "pass",
-  "label": "PASS EVIDENCE: Provider data protection obligations",
-  "phrases": ["Data protection", "Security Requirements"]}]
+[{"page": 2, "kind": "pass",
+  "label": "PASS EVIDENCE: duplicate charge documented",
+  "phrases": ["amount due", "payment received"]}]
 EOF
-python3 scripts/annotate_pdf.py contract.pdf --spec spec.json --outdir exhibits --provenance
+python3 scripts/annotate_pdf.py invoice.pdf --spec spec.json --outdir exhibits --provenance
 ```
 
 All parameters for both scripts are documented in the "Reference: all
@@ -164,7 +164,7 @@ parameters" section below.
 
 LumenPDF stands on third-party tools: [PyMuPDF](https://pymupdf.readthedocs.io/) for PDF parsing and rendering, [Pillow](https://python-pillow.org/) for image drawing, and [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) for optical character recognition. See `NOTICE.md` for component roles and licensing (PyMuPDF is AGPL-3.0 or commercial - check the note there if your organization licenses installed dependencies strictly).
 
-The annotation methodology comes from contract review workpaper practice, contributed by Audit Risk Media, LLC (CC BY 4.0). The extraction design originates in the bash-based `ocr-pdf` skill.
+The annotation methodology comes from document review workpaper practice, contributed by Audit Risk Media, LLC (CC BY 4.0). The extraction design originates in the bash-based `ocr-pdf` skill.
 
 ## License
 
