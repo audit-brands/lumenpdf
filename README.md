@@ -122,11 +122,33 @@ uses it as an unmodified installed dependency; see `NOTICE.md` for what that
 means if your organization licenses installed dependencies strictly.
 ## Quick start
 
+### For everyone: just ask your agent
+
+If LumenPDF is installed as a skill (see "Install the skill" below), you do
+not run anything by hand. Open Claude Code (or pi), make sure the PDF is in
+your working folder, and ask:
+
+> "OCR contractA.pdf and keep the provenance."
+
+> "Screen this contract and annotate an exhibit showing the termination
+> clause, then make one showing the missing audit-rights clause."
+
+The agent reads this skill, installs anything missing (`pip install pymupdf
+pillow`, and tesseract if the PDF is scanned), runs the scripts, and reports
+back with the transcript, exhibits, and provenance files. If it asks whether
+to keep page images and the provenance JSON, that is the documented agent
+behavior - answering "yes, both" is right for audit work.
+
+### For the technically inclined: direct CLI
+
 ```bash
-# Extract text (hybrid, with full provenance)
+# one-time setup
+pip install pymupdf pillow          # + tesseract for scanned PDFs (table below)
+
+# extract text (hybrid, with full provenance)
 python3 scripts/ocr_pdf.py contract.pdf contract.md --provenance --keep-images
 
-# Screen the transcript, then annotate the deciding passages
+# annotate the deciding passages
 cat > spec.json <<'EOF'
 [{"page": 4, "kind": "pass",
   "label": "PASS EVIDENCE: Provider data protection obligations",
@@ -134,6 +156,9 @@ cat > spec.json <<'EOF'
 EOF
 python3 scripts/annotate_pdf.py contract.pdf --spec spec.json --outdir exhibits --provenance
 ```
+
+All parameters for both scripts are documented in the "Reference: all
+parameters" section below.
 
 ## Acknowledgments
 
