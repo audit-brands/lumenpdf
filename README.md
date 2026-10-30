@@ -5,6 +5,8 @@
 PDF text extraction and evidence annotation for AI coding agents. Per-page hybrid OCR (exact text layer where present, tesseract OCR where not), page-marked Markdown transcripts, annotated evidence exhibits, and machine-readable provenance for every artifact.
 
 Built for document review: every extraction and annotation is reproducible, whatever the PDF - contracts, invoices, statements, policies, forms, or scanned correspondence. Per-page method, word counts, tool versions, matched phrases with OCR confidence, and optional rendered page images.
+
+**[See it working →](https://audit-brands.github.io/lumenpdf/)** A real PDF, a real exhibit, and the provenance record behind it, all produced by the scripts in this repository and displayed with [Slipsheet](https://github.com/jonto/slipsheet).
 ## Contents
 
 ```
@@ -15,6 +17,8 @@ scripts/annotate_pdf.py       # annotation: pymupdf text mode + tesseract OCR mo
 references/annotation-reference.md   # the annotation methodology (document review
                                      # workpaper exhibits)
 install.sh                    # deploy to agent skill directories
+index.html                    # live demo page (GitHub Pages)
+demo/build.py                 # regenerates every demo artifact from the real scripts
 ```
 
 ## Quick install
@@ -40,6 +44,21 @@ If LumenPDF is installed as a skill (see "Quick install" above), you do not run 
 > clause, then make one showing the missing audit-rights clause."
 
 The agent reads this skill, installs anything missing (`pip install pymupdf pillow`, and tesseract if the PDF is scanned), runs the scripts, and reports back with the transcript, exhibits, and provenance files. If it asks whether to keep page images and the provenance JSON, that is the documented agent behavior - answering "yes, both" is right for audit work.
+
+## Examples
+
+Live, no checkout required:
+
+- **[audit-brands.github.io/lumenpdf](https://audit-brands.github.io/lumenpdf/)** - an exhibit boxing the Abstract of Mozilla's tracemonkey paper (the same PDF the Slipsheet demo uses), a switch to the untouched source, and the provenance record read live from the files LumenPDF wrote
+- **[demo/](demo/)** - every file behind the demo, as written: [`spec.json`](demo/spec.json), the [annotation provenance](demo/exhibits/tracemonkey_annotations.prov.json), the [transcript](demo/tracemonkey.md), and the [extraction provenance](demo/tracemonkey.prov.json)
+
+Or rebuild and run it locally:
+
+```bash
+python3 demo/build.py           # regenerates everything in demo/ from the real scripts
+python3 -m http.server 8000     # static server on :8000
+# then open http://localhost:8000
+```
 
 ## Technical install
 
