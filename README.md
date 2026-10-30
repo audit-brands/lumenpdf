@@ -1,5 +1,7 @@
 # LumenPDF
 
+![LumenPDF: PDF text extraction and evidence annotation for AI coding agents](assets/lumenpdf-banner.jpeg)
+
 PDF text extraction and evidence annotation for AI coding agents. Per-page hybrid OCR (exact text layer where present, tesseract OCR where not), page-marked Markdown transcripts, annotated evidence exhibits, and machine-readable provenance for every artifact.
 
 Built for document review: every extraction and annotation is reproducible, whatever the PDF - contracts, invoices, statements, policies, forms, or scanned correspondence. Per-page method, word counts, tool versions, matched phrases with OCR confidence, and optional rendered page images.
@@ -7,6 +9,7 @@ Built for document review: every extraction and annotation is reproducible, what
 ## Contents
 
 ```
+assets/                       # media assets (banner image)
 SKILL.md                      # agent-facing skill instructions (portable format)
 scripts/ocr_pdf.py            # extraction: per-page hybrid, --provenance, --keep-images
 scripts/annotate_pdf.py       # annotation: pymupdf text mode + tesseract OCR mode
