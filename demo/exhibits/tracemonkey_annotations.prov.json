@@ -1,0 +1,47 @@
+{
+  "source": "tracemonkey.pdf",
+  "generated_utc": "2026-10-30T15:38:31.248424+00:00",
+  "dpi": 120,
+  "min_confidence": 60.0,
+  "exhibits": [
+    {
+      "page": 1,
+      "label": "PASS EVIDENCE: Abstract states the method and the measured result (10x speedups)",
+      "kind": "pass",
+      "mode": "pymupdf-text",
+      "phrases": [
+        "Abstract",
+        "Since no concrete type information is available, traditional compilers need to emit generic code that can handle all possible type combinations at runtime",
+        "generates machine code on the",
+        "method provides cheap inter-procedural type specialization",
+        "we have measured speedups of 10x and more for certain benchmark programs"
+      ],
+      "matched": [
+        {
+          "phrase": "Abstract",
+          "line_rects": 1
+        },
+        {
+          "phrase": "Since no concrete type information is available, traditional compilers need to emit generic code that can handle all possible type combinations at runtime",
+          "line_rects": 3
+        },
+        {
+          "phrase": "generates machine code on the",
+          "line_rects": 1
+        },
+        {
+          "phrase": "method provides cheap inter-procedural type specialization",
+          "line_rects": 1
+        },
+        {
+          "phrase": "we have measured speedups of 10x and more for certain benchmark programs",
+          "line_rects": 3
+        }
+      ],
+      "missed": [],
+      "flagged_low_confidence": [],
+      "boxes": 1,
+      "exhibit": "exhibits/tracemonkey_EX1_abstract.png"
+    }
+  ]
+}

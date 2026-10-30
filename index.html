@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lumenpdf — PDFs into audit evidence, with the receipts</title>
+<meta name="description" content="An MIT-licensed skill for Claude Code and pi that extracts text from PDFs and builds annotated evidence exhibits, and records how every output was made.">
+
+<link rel="preload" href="./assets/fonts/atkinson-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="./assets/fonts/literata-600.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@slipsheet/viewer@0.1.0/dist/viewer.min.css">
+
+<style>
+/* ─── Fonts ─────────────────────────────────────────────────────────────
+   Self-hosted, as on the Slipsheet demo. Both faces are SIL OFL;
+   licenses ship in assets/fonts/.                                       */
+
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  src: url('./assets/fonts/atkinson-400.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  src: url('./assets/fonts/atkinson-700.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Literata';
+  src: url('./assets/fonts/literata-600.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+
+/* ─── Tokens ──────────────────────────────────────────────────────────── */
+
+:root {
+  --paper:      oklch(98.4% 0.005 106);
+  --surface-2:  oklch(95.9% 0.010 87);
+  --surface-3:  oklch(93.4% 0.014 89);
+  --rule:       oklch(90.8% 0.015 85);
+  --ink:        oklch(27.6% 0.014 96);
+  --ink-muted:  oklch(50.9% 0.015 82);
+  /* Exhibit blue: the banner colour, so the page and the exhibits agree. */
+  --accent:      oklch(48% 0.150 262);
+  --accent-text: oklch(45% 0.150 262);
+  --miss:        oklch(52% 0.170 28);
+
+  --font-display: 'Literata', Georgia, 'Times New Roman', serif;
+  --font-body: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.875rem;
+  --text-display: clamp(2.75rem, 7vw, 4.25rem);
+
+  --measure: 47rem;
+  --gutter: clamp(1.25rem, 5vw, 3rem);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper:      oklch(15% 0.01 80);
+    --surface-2:  oklch(20% 0.01 80);
+    --surface-3:  oklch(28% 0.01 80);
+    --rule:       oklch(35% 0.01 80);
+    --ink:        oklch(92% 0.005 80);
+    --ink-muted:  oklch(75% 0.008 80);
+    --accent:      oklch(70% 0.120 262);
+    --accent-text: oklch(76% 0.110 262);
+    --miss:        oklch(72% 0.140 28);
+  }
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 var(--text-base)/1.55 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+a { color: var(--accent-text); text-decoration: underline; text-underline-offset: 0.15em; }
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+code, kbd { font-family: var(--font-mono); font-size: 0.9em; }
+
+.wrap, .wide { max-width: 58rem; margin-inline: auto; padding-inline: var(--gutter); }
+.wrap > * { max-width: var(--measure); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+.skip {
+  position: absolute; left: var(--gutter); top: -100%;
+  background: var(--paper); color: var(--ink);
+  padding: 0.75rem 1rem; border: 1px solid var(--accent); border-radius: 0.375rem;
+  z-index: 100; text-decoration: none;
+}
+.skip:focus { top: 0.75rem; }
+
+/* ─── Masthead ────────────────────────────────────────────────────────── */
+
+header.masthead { padding: clamp(3rem, 9vw, 6rem) 0 0; }
+
+.eyebrow {
+  font-size: var(--text-xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 1.25rem;
+}
+
+h1 { font-size: var(--text-display); margin-bottom: 1rem; }
+
+.lede {
+  font-size: var(--text-lg);
+  color: var(--ink-muted);
+  max-width: 36ch;
+  margin: 0 0 2rem;
+  line-height: 1.45;
+}
+.lede strong { color: var(--ink); font-weight: 400; }
+
+.meta {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem;
+  font-size: var(--text-sm); color: var(--ink-muted);
+  margin: 0 0 clamp(2.5rem, 6vw, 4rem);
+  padding: 0; list-style: none;
+}
+.meta li { display: flex; gap: 0.4rem; }
+.meta .v { color: var(--ink); }
+
+/* ─── Demo ────────────────────────────────────────────────────────────── */
+
+.demo { padding-top: 0; margin-bottom: clamp(3rem, 8vw, 5rem); }
+
+.demo-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: 0.75rem 1.5rem;
+  padding-bottom: 0.75rem; margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+.demo-title { font-size: var(--text-sm); color: var(--ink-muted); margin: 0; font-family: var(--font-body); letter-spacing: 0; font-weight: 400; }
+.demo-title strong { color: var(--ink); font-weight: 700; }
+
+.switch { display: inline-flex; border: 1px solid var(--rule); border-radius: 0.375rem; overflow: hidden; }
+.switch button {
+  font: 400 var(--text-sm) var(--font-body);
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 0;
+  padding: 0.4rem 0.85rem;
+  cursor: pointer;
+  transition: background-color 120ms var(--ease), color 120ms var(--ease);
+}
+.switch button + button { border-left: 1px solid var(--rule); }
+.switch button:hover { background: var(--surface-3); }
+.switch button[aria-pressed="true"] { background: var(--surface-3); color: var(--accent-text); font-weight: 700; }
+
+.demo-note {
+  font-size: var(--text-sm); color: var(--ink-muted);
+  margin: 1rem 0 0; min-height: 3em;
+}
+
+/* ─── Sections ────────────────────────────────────────────────────────── */
+
+main section { padding-block: clamp(2.5rem, 7vw, 5rem); }
+main section + section { border-top: 1px solid var(--rule); }
+
+h2 { font-size: var(--text-xl); margin-bottom: 0.5rem; }
+h2 + p { margin-top: 0; }
+h3 { font-size: var(--text-lg); margin: 2.5rem 0 0.5rem; }
+p { margin: 0 0 1.25rem; }
+p:last-child { margin-bottom: 0; }
+
+.argument { margin: 0; padding: 0; }
+.argument > div { padding-block: 1.5rem; }
+.argument > div + div { border-top: 1px solid var(--rule); }
+.argument dt {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: var(--text-lg); letter-spacing: -0.01em;
+  margin-bottom: 0.35rem;
+}
+.argument dd { margin: 0; color: var(--ink-muted); }
+
+/* ─── The record ──────────────────────────────────────────────────────── */
+
+.facts {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--rule);
+  border: 1px solid var(--rule); border-radius: 0.5rem; overflow: hidden;
+  margin: 1.5rem 0;
+}
+@media (max-width: 30rem) { .facts { grid-template-columns: repeat(2, 1fr); } }
+.facts div { background: var(--paper); padding: 0.85rem 1rem; }
+.facts dt { font-size: var(--text-xs); color: var(--ink-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.facts dd { margin: 0.2rem 0 0; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
+
+.phrases { width: 100%; border-collapse: collapse; font-size: var(--text-sm); margin: 0 0 1.25rem; }
+.phrases th, .phrases td { text-align: left; padding: 0.55rem 0.75rem 0.55rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.phrases th { font-weight: 400; color: var(--ink-muted); font-size: var(--text-xs); letter-spacing: 0.06em; text-transform: uppercase; }
+.phrases td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ok { color: var(--accent-text); font-weight: 700; }
+.missed { color: var(--miss); font-weight: 700; }
+
+.files { padding-left: 1.1rem; margin: 0 0 1.25rem; }
+.files li { margin-bottom: 0.35rem; }
+
+/* ─── Code ────────────────────────────────────────────────────────────── */
+
+pre {
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  padding: 1rem 1.15rem;
+  overflow-x: auto;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  margin: 0 0 1.25rem;
+}
+pre code { font-size: inherit; }
+p code, li code, dd code, td code {
+  background: var(--surface-3);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+}
+
+.install { position: relative; }
+.copy {
+  position: absolute; top: 0.5rem; right: 0.5rem;
+  font: 400 var(--text-xs) var(--font-body);
+  color: var(--ink-muted);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 0.375rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: color 120ms var(--ease), border-color 120ms var(--ease);
+}
+.copy:hover { color: var(--ink); border-color: var(--accent); }
+.copy[data-copied="true"] { color: var(--accent-text); border-color: var(--accent); }
+
+/* ─── Footer ──────────────────────────────────────────────────────────── */
+
+footer {
+  border-top: 1px solid var(--rule);
+  padding-block: 2.5rem clamp(2.5rem, 6vw, 4rem);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.links { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin: 0 0 1.5rem; padding: 0; list-style: none; }
+.colophon { max-width: 60ch; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">MIT licensed · a skill for Claude Code and pi</p>
+    <h1>lumenpdf</h1>
+    <p class="lede">
+      Turn PDFs into audit evidence. <strong>Every output records how it was
+      made</strong>, so a reviewer can check the work instead of trusting it.
+    </p>
+    <ul class="meta">
+      <li><span>runs</span> <span class="v">locally</span></li>
+      <li><span>network</span> <span class="v">none</span></li>
+      <li><span>needs</span> <span class="v">pymupdf, pillow, tesseract</span></li>
+      <li><span>decides</span> <span class="v">nothing</span></li>
+    </ul>
+  </div>
+</header>
+
+<main id="main">
+
+  <section class="demo wide" aria-labelledby="demo-h">
+    <div class="demo-head">
+      <h2 id="demo-h" class="demo-title"><strong>Live.</strong> The Slipsheet demo's PDF, run through LumenPDF.</h2>
+      <div class="switch" role="group" aria-label="Document to show">
+        <button type="button" data-show="exhibit" aria-pressed="true">Exhibit</button>
+        <button type="button" data-show="source" aria-pressed="false">Source PDF</button>
+      </div>
+    </div>
+
+    <div class="slipsheet" id="live-embed"
+         data-src="./demo/exhibit.pdf"
+         data-pages="1"
+         data-filename="tracemonkey_EX1_abstract.pdf">
+      <a href="./demo/exhibit.pdf" download="tracemonkey_EX1_abstract.pdf">Download tracemonkey_EX1_abstract.pdf (1 page)</a>
+    </div>
+
+    <p class="demo-note" id="demo-note" role="status"></p>
+  </section>
+
+  <section aria-labelledby="record-h">
+    <div class="wrap">
+      <h2 id="record-h">The record behind the box</h2>
+      <p>
+        The red box is the convenience. This is the evidence: the files LumenPDF wrote
+        alongside the exhibit, read live from this site. A reviewer can see what was
+        searched for, what was found, and how each page was read, without asking.
+      </p>
+
+      <dl class="facts" id="facts" aria-live="polite">
+        <div><dt>Pages</dt><dd>…</dd></div>
+      </dl>
+
+      <table class="phrases" id="phrases">
+        <caption class="sr-only">Phrases searched for in the exhibit</caption>
+        <thead><tr><th scope="col">Phrase searched for</th><th scope="col">Result</th></tr></thead>
+        <tbody><tr><td colspan="2">Loading the provenance file…</td></tr></tbody>
+      </table>
+
+      <p>
+        Five short phrases anchor one passage. The Abstract wraps across lines with
+        hyphenated words and printer's ligatures, so the spec names clean phrases spread
+        through the paragraph, and LumenPDF pools their hits into a single box. If any
+        phrase had not been found, it would be listed here as missed, and the exhibit
+        would still be produced so the gap shows up in the workpaper.
+      </p>
+
+      <h3>Every file, as written</h3>
+      <ul class="files">
+        <li><a href="./demo/spec.json"><code>spec.json</code></a>: what to highlight, and the conclusion to state</li>
+        <li><a href="./demo/exhibits/tracemonkey_annotations.prov.json"><code>tracemonkey_annotations.prov.json</code></a>: what matched, what was missed, how many boxes</li>
+        <li><a href="./demo/tracemonkey.md"><code>tracemonkey.md</code></a>: the full-text transcript, with each page's method</li>
+        <li><a href="./demo/tracemonkey.prov.json"><code>tracemonkey.prov.json</code></a>: per-page method, word counts, tool versions</li>
+        <li><a href="https://github.com/audit-brands/lumenpdf/blob/main/demo/build.py"><code>demo/build.py</code></a>: the script that produced all of the above</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="transcript-h">
+    <div class="wrap">
+      <h2 id="transcript-h">Every page says how it was read</h2>
+      <p>
+        Where a PDF carries real text, LumenPDF uses it exactly. Where a page is a scan,
+        it reads the image with OCR. Either way, the transcript says which, page by page,
+        so a reviewer knows which passages to spot-check before quoting them.
+      </p>
+<pre><code id="transcript">Loading the transcript…</code></pre>
+    </div>
+  </section>
+
+  <section aria-labelledby="install-h">
+    <div class="wrap">
+      <h2 id="install-h">Install</h2>
+      <p>Clone it and run the installer. It copies the skill into Claude Code, pi, or both.</p>
+
+      <div class="install">
+        <button class="copy" type="button" data-copy="git clone https://github.com/audit-brands/lumenpdf &amp;&amp; ./lumenpdf/install.sh">Copy</button>
+<pre><code>git clone https://github.com/audit-brands/lumenpdf &amp;&amp; ./lumenpdf/install.sh</code></pre>
+      </div>
+
+      <h3>Then ask for what you want</h3>
+<pre><code>"OCR this agreement and keep the provenance."
+"Make an evidence exhibit for the abstract on page 1."</code></pre>
+      <p>
+        The skill installs its own Python dependencies on first use, and adds tesseract
+        only when a document has scanned pages. Prefer the command line? The
+        <a href="https://github.com/audit-brands/lumenpdf#readme">README</a> covers both
+        scripts and every option.
+      </p>
+    </div>
+  </section>
+
+  <section aria-labelledby="why-h">
+    <div class="wrap">
+      <h2 id="why-h">Why it is built this way</h2>
+      <dl class="argument">
+        <div>
+          <dt>It never decides</dt>
+          <dd>
+            LumenPDF extracts and annotates. Whether a clause passes is the auditor's
+            judgment, written in the spec by a person. The tool stops at the evidence.
+          </dd>
+        </div>
+        <div>
+          <dt>Exact text and OCR are never blended</dt>
+          <dd>
+            Each page declares which method produced it. OCR is used where it is needed
+            and nowhere else, so pages with a perfect text layer are never degraded.
+          </dd>
+        </div>
+        <div>
+          <dt>A miss is recorded, not hidden</dt>
+          <dd>
+            Phrases that were not found are listed in the record. An exhibit where nothing
+            matched prints a warning and is still saved. Low-confidence OCR matches are
+            flagged instead of boxed as if they were certain.
+          </dd>
+        </div>
+        <div>
+          <dt>Nothing leaves your machine</dt>
+          <dd>
+            No network calls, no model, no service. Pure document tooling, so it is safe
+            to point at the documents that matter most.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <ul class="links">
+      <li><a href="https://github.com/audit-brands/lumenpdf">GitHub</a></li>
+      <li><a href="https://github.com/audit-brands/lumenpdf/blob/main/references/annotation-reference.md">Annotation method</a></li>
+      <li><a href="https://jonto.github.io/slipsheet/">Slipsheet demo</a></li>
+    </ul>
+    <p class="colophon">
+      The exhibit above is displayed with Slipsheet, LumenPDF's sibling project. Sample
+      document is Mozilla's tracemonkey paper, the same one the Slipsheet demo uses. Local
+      paths in the published records are trimmed to the demo folder. Code MIT, annotation
+      method CC BY 4.0.
+    </p>
+  </div>
+</footer>
+
+<script type="module">
+  import { Slipsheet } from 'https://cdn.jsdelivr.net/npm/@slipsheet/viewer@0.1.0/dist/viewer.min.js';
+
+  const DOCS = {
+    exhibit: {
+      src: './demo/exhibit.pdf', pages: 1, filename: 'tracemonkey_EX1_abstract.pdf',
+      note: 'The exhibit: one red box around the Abstract, and a banner stating the conclusion. Press F for fullscreen.',
+    },
+    source: {
+      src: './demo/tracemonkey.pdf', pages: 14, filename: 'tracemonkey.pdf',
+      note: 'The source, untouched. LumenPDF never writes on the original; the exhibit is a separate file.',
+    },
+  };
+
+  const note = document.getElementById('demo-note');
+
+  // Swap in a fresh element rather than re-hydrating the old one, so no
+  // viewer state or listeners carry over between documents.
+  function show(key) {
+    const d = DOCS[key];
+    const old = document.getElementById('live-embed');
+    const el = document.createElement('div');
+    el.className = 'slipsheet';
+    el.id = 'live-embed';
+    el.dataset.src = d.src;
+    el.dataset.pages = String(d.pages);
+    el.dataset.filename = d.filename;
+    const a = document.createElement('a');
+    a.href = d.src;
+    a.download = d.filename;
+    a.textContent = `Download ${d.filename} (${d.pages} page${d.pages === 1 ? '' : 's'})`;
+    el.append(a);
+    old.replaceWith(el);
+    Slipsheet.attach(el, { lazy: false });
+    note.textContent = d.note;
+    for (const b of document.querySelectorAll('.switch button')) {
+      b.setAttribute('aria-pressed', String(b.dataset.show === key));
+    }
+  }
+
+  Slipsheet.init({ lazy: false });
+  note.textContent = DOCS.exhibit.note;
+  for (const b of document.querySelectorAll('.switch button')) {
+    b.addEventListener('click', () => show(b.dataset.show));
+  }
+
+  // The record section reads the real provenance files, so what the page
+  // claims and what the tool wrote cannot drift apart.
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  async function loadRecord() {
+    try {
+      const [ann, ocr, md] = await Promise.all([
+        fetch('./demo/exhibits/tracemonkey_annotations.prov.json').then((r) => r.json()),
+        fetch('./demo/tracemonkey.prov.json').then((r) => r.json()),
+        fetch('./demo/tracemonkey.md').then((r) => r.text()),
+      ]);
+      const ex = ann.exhibits[0];
+      const facts = [
+        ['Pages', ocr.pages_total],
+        ['Read from text', ocr.pages_text_layer],
+        ['Read by OCR', ocr.pages_ocr],
+        ['Exhibit mode', ex.mode === 'pymupdf-text' ? 'text layer' : 'OCR'],
+        ['Boxes drawn', ex.boxes],
+        ['Phrases missed', ex.missed.length],
+      ];
+      document.getElementById('facts').innerHTML = facts
+        .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('');
+
+      const rows = [
+        ...ex.matched.map((m) => `<tr><td>${esc(m.phrase)}</td><td class="n"><span class="ok">found</span>, ${m.line_rects ?? 1} line${(m.line_rects ?? 1) === 1 ? '' : 's'}</td></tr>`),
+        ...ex.missed.map((p) => `<tr><td>${esc(p)}</td><td class="n"><span class="missed">missed</span></td></tr>`),
+        ...ex.flagged_low_confidence.map((f) => `<tr><td>${esc(f.phrase)}</td><td class="n"><span class="missed">low confidence</span> (${esc(f.confidence)})</td></tr>`),
+      ];
+      document.querySelector('#phrases tbody').innerHTML = rows.join('');
+
+      const lines = md.split('\n');
+      const end = lines.findIndex((l, i) => i > 0 && l.startsWith('=== PAGE 2'));
+      const start = lines.findIndex((l) => l.startsWith('=== PAGE 1'));
+      const page1 = lines.slice(start, end);
+      document.getElementById('transcript').textContent =
+        [...page1.slice(0, 4), '…', '', ...lines.slice(end, end + 4), '…'].join('\n');
+    } catch {
+      document.querySelector('#phrases tbody').innerHTML =
+        '<tr><td colspan="2">The record could not be loaded here. The files are linked below.</td></tr>';
+      document.getElementById('transcript').textContent = 'See tracemonkey.md, linked above.';
+    }
+  }
+  loadRecord();
+
+  for (const b of document.querySelectorAll('.copy')) {
+    b.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(b.dataset.copy);
+        b.textContent = 'Copied';
+        b.dataset.copied = 'true';
+        setTimeout(() => { b.textContent = 'Copy'; delete b.dataset.copied; }, 2000);
+      } catch {
+        b.textContent = 'Press Ctrl+C';
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

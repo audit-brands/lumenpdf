@@ -1,0 +1,108 @@
+{
+  "transcript": "tracemonkey.md",
+  "source": "tracemonkey.pdf",
+  "extracted_utc": "2026-10-30T15:38:30.943527+00:00",
+  "pages_total": 14,
+  "page_range": [
+    1,
+    14
+  ],
+  "pages_text_layer": 14,
+  "pages_ocr": 0,
+  "min_words_threshold": 20,
+  "force_ocr": false,
+  "no_ocr": false,
+  "images_kept": false,
+  "output_words": 13566,
+  "output_bytes": 84161,
+  "tools": {
+    "pymupdf": "1.28.2",
+    "tesseract": "tesseract 4.1.1"
+  },
+  "pages": [
+    {
+      "page": 1,
+      "method": "pdftotext",
+      "pdftotext_words": 723,
+      "chars": 5005
+    },
+    {
+      "page": 2,
+      "method": "pdftotext",
+      "pdftotext_words": 1069,
+      "chars": 6333
+    },
+    {
+      "page": 3,
+      "method": "pdftotext",
+      "pdftotext_words": 856,
+      "chars": 4724
+    },
+    {
+      "page": 4,
+      "method": "pdftotext",
+      "pdftotext_words": 1248,
+      "chars": 7530
+    },
+    {
+      "page": 5,
+      "method": "pdftotext",
+      "pdftotext_words": 1357,
+      "chars": 7995
+    },
+    {
+      "page": 6,
+      "method": "pdftotext",
+      "pdftotext_words": 1029,
+      "chars": 5797
+    },
+    {
+      "page": 7,
+      "method": "pdftotext",
+      "pdftotext_words": 1020,
+      "chars": 5626
+    },
+    {
+      "page": 8,
+      "method": "pdftotext",
+      "pdftotext_words": 1072,
+      "chars": 6554
+    },
+    {
+      "page": 9,
+      "method": "pdftotext",
+      "pdftotext_words": 1213,
+      "chars": 7580
+    },
+    {
+      "page": 10,
+      "method": "pdftotext",
+      "pdftotext_words": 996,
+      "chars": 6811
+    },
+    {
+      "page": 11,
+      "method": "pdftotext",
+      "pdftotext_words": 604,
+      "chars": 3970
+    },
+    {
+      "page": 12,
+      "method": "pdftotext",
+      "pdftotext_words": 878,
+      "chars": 5150
+    },
+    {
+      "page": 13,
+      "method": "pdftotext",
+      "pdftotext_words": 911,
+      "chars": 6440
+    },
+    {
+      "page": 14,
+      "method": "pdftotext",
+      "pdftotext_words": 437,
+      "chars": 3146
+    }
+  ]
+}

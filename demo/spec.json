@@ -1,0 +1,15 @@
+[
+  {
+    "page": 1,
+    "kind": "pass",
+    "label": "PASS EVIDENCE: Abstract states the method and the measured result (10x speedups)",
+    "phrases": [
+      "Abstract",
+      "Since no concrete type information is available, traditional compilers need to emit generic code that can handle all possible type combinations at runtime",
+      "generates machine code on the",
+      "method provides cheap inter-procedural type specialization",
+      "we have measured speedups of 10x and more for certain benchmark programs"
+    ],
+    "filename": "tracemonkey_EX1_abstract.png"
+  }
+]
